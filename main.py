@@ -1,13 +1,6 @@
 import requests
 import os
-from tkinter import Tk, filedialog
-
-def choose_directory():
-    root = Tk()
-    root.withdraw()
-    directory = filedialog.askdirectory(title='Select Directory to create md files to')
-    root.destroy()
-    return directory
+import argparse
 
 def get_spell_details(spell_url):
     full_url = f"https://www.dnd5eapi.co{spell_url}"
@@ -19,7 +12,7 @@ def get_spell_details(spell_url):
         print(f"Error fetching spell details for {spell_url}. Status code: {response.status_code}")
         return None
 
-def create_spell_markdown(spell_data, save_directory):
+def create_spell_markdown(spell_data):
     #variables
     spell_name = spell_data.get('name', 'Unknown Spell')
     spell_desc = spell_data.get('desc', ['No description'])[0]
@@ -84,81 +77,18 @@ def save_spell_md_file(spell_details, content, save_directory):
     print(f'Created file: {file_path}')
     return True  # File was saved successfully
 
-def main():
-    url = "https://www.dnd5eapi.co/api/spells"
-    response = requests.get(url)
+parser = argparse.ArgumentParser(
+                prog='ProgramName',
+                description='What the program does',
+                epilog='Text at the bottom of help')
+parser.add_argument('-p', '--path')
+args = parser.parse_args()
 
-    if response.status_code == 200:
-        spell_data = response.json()
-        spells = spell_data['results']
-        save_directory = choose_directory()
+url = "https://www.dnd5eapi.co/api/spells"
+response = requests.get(url)
 
-        if not save_directory:
-            print("User canceled. Exiting.")
-            return  # breaks if the user cancels directory selection
+if response.status_code == 200:
+    spell_data = response.json()
+    spells = spell_data['results']
+    save_directory = args.path
 
-        while True:
-            # Main menu
-            print("\nMain Menu:")
-            print("1) Create MD files for all spells")
-            print("2) Create for a specific spell")
-            print("3) Stop")
-
-            choice = input("Enter your choice (1, 2, or 3): ")
-
-            if choice == "1":
-                for spell in spells:
-                    spell_details = get_spell_details(spell['url'])
-                    if spell_details is not None:
-                        content = create_spell_markdown(spell_details, save_directory)
-                        save_result = save_spell_md_file(spell_details, content, save_directory)
-                        if save_result:
-                            print(f"MD file created successfully for {spell_details['name']}.")
-            elif choice == "2":
-                while True:
-                    spell_name_to_generate = input("Enter the name of the spell you want to generate an MD file for (or type 'back' to return to the main menu): ")
-
-                    if spell_name_to_generate.lower() == 'back':
-                        break  # returns to the main menu
-
-                    matching_spells = [spell for spell in spells if spell_name_to_generate.lower() in spell['name'].lower()]
-
-                    if not matching_spells:
-                        print(f'No spells found with the name "{spell_name_to_generate}" in the API.')
-                    elif len(matching_spells) == 1:
-                        spell_details = get_spell_details(matching_spells[0]['url'])
-                        if spell_details is not None:
-                            content = create_spell_markdown(spell_details, save_directory)
-                            save_result = save_spell_md_file(spell_details, content, save_directory)
-                            if save_result:
-                                print("MD file created successfully.")
-                    else:
-                        print(f'Multiple spells found with the name "{spell_name_to_generate}":')
-                        for i, spell in enumerate(matching_spells, 1):
-                            print(f"{i}. {spell['name']}")
-
-                        spell_choice = input("Enter the number of the spell you want to generate an MD file for (or type 'back' to return to the main menu): ")
-                        if spell_choice.lower() == 'back':
-                            break  # returns to the main menu
-
-                        try:
-                            spell_index = int(spell_choice) - 1
-                            selected_spell = matching_spells[spell_index]
-                            spell_details = get_spell_details(selected_spell['url'])
-                            if spell_details is not None:
-                                content = create_spell_markdown(spell_details, save_directory)
-                                save_result = save_spell_md_file(spell_details, content, save_directory)
-                                if save_result:
-                                    print("MD file created successfully.")
-                        except (ValueError, IndexError):
-                            print("Invalid input. Please enter a valid number.")
-            elif choice == "3":
-                print("Exiting the program.")
-                break  # stops the program
-            else:
-                print("Invalid choice. Please enter 1, 2, or 3.")
-    else:
-        print("Error", response.status_code)
-
-if __name__ == "__main__":
-    main()
