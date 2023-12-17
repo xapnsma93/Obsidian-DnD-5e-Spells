@@ -32,8 +32,11 @@ def get_spell_details(spell_url):
         return None
 
 
-def save_spell_md_file(spell_details, spell_template, save_directory, spell_name):
-    file_path = os.path.join(save_directory, f'{spell_name}.md')
+def save_spell_md_file(spell_details, spell_template, save_directory):
+    spell_name = spell_details['name']
+    # Replace '/' with another character (curse you antipathy/sympathy, blindness/deafness) in the spell name
+    sanitized_spell_name = spell_name.replace('/', '_').title()
+    file_path = os.path.join(save_directory, f'{sanitized_spell_name}.md')
     content = spell_template.render(spell_data=spell_details)
 
     if os.path.exists(file_path):
@@ -50,6 +53,7 @@ def save_spell_md_file(spell_details, spell_template, save_directory, spell_name
 
 
 def main():
+    print("Starting the main function")
     parser = argparse.ArgumentParser(description='Generate Markdown files for D&D 5e spells.')
     parser.add_argument('--path', help='Directory path to save the files', default=os.path.curdir)
     parser.add_argument('--spell', help='Specific spell to generate the MD file for')
@@ -63,24 +67,31 @@ def main():
     response = requests.get(url)
 
     if response.status_code == 200:
+        print("API request successful")
         spell_data = response.json()
+        print("Spell data:", spell_data)
         spells = spell_data['results']
 
         # jinja2 template from file
         template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
-        template_loader = jinja2.FileSystemLoader(searchpath=template_dir)
+        template_loader = FileSystemLoader(searchpath=template_dir)
         template_env = Environment(loader=template_loader)
-        spell_template = template_env.get_template('spell_template.jinja2')
+        spell_template = template_env.get_template('spell_template.md')
 
         if spell_name_to_generate:
             matching_spells = [spell for spell in spells if spell_name_to_generate.lower() in spell['name'].lower()]
-
+            print("Matching spells:", matching_spells)
             if not matching_spells:
                 print(f'No spells found with the name "{spell_name_to_generate}" in the API.')
             elif len(matching_spells) == 1:
                 spell_details = get_spell_details(matching_spells[0]['url'])
+                print("Spell details:", spell_details)
                 if spell_details:
-                    save_result = save_spell_md_file(spell_details, spell_template, save_directory, spell_name_to_generate)
+                    # Ensure that the save directory exists
+                    if not ensure_valid_directory(save_directory):
+                        return
+
+                    save_result = save_spell_md_file(spell_details, spell_template, save_directory)
                     if save_result:
                         print("MD file created successfully.")
             else:
@@ -97,11 +108,26 @@ def main():
                     selected_spell = matching_spells[spell_index]
                     spell_details = get_spell_details(selected_spell['url'])
                     if spell_details:
-                        save_result = save_spell_md_file(spell_details, spell_template, save_directory, spell_name_to_generate)
+                        # Ensure that the save directory exists
+                        if not ensure_valid_directory(save_directory):
+                            return
+
+                        save_result = save_spell_md_file(spell_details, spell_template, save_directory)
                         if save_result:
                             print("MD file created successfully.")
                 except (ValueError, IndexError):
                     print("Invalid input. Please enter a valid number.")
+        else:
+            for all_spells in spells:
+                spell_details = get_spell_details(all_spells['url'])
+                if spell_details:
+                    # Ensure that the save directory exists
+                    if not ensure_valid_directory(save_directory):
+                        return
+
+                    save_result = save_spell_md_file(spell_details, spell_template, save_directory)
+                    if save_result:
+                        print("MD file created successfully.")
     else:
         print("Error", response.status_code)
 
