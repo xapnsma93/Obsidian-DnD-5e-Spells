@@ -96,14 +96,7 @@ def main():
             elif len(matching_spells) == 1:
                 spell_details = get_spell_details(matching_spells[0]['url'])
 
-                if spell_details:
-                    # Ensure that the save directory exists
-                    if not ensure_valid_directory(save_directory):
-                        return
-
-                    save_result = save_spell_md_file(spell_details, spell_template, save_directory)
-                    if save_result:
-                        print("MD file created successfully.")
+                saving_result(spell_details, spell_template, save_directory)
             else:
                 print(f'Multiple spells found with the name "{spell_name_to_generate}":')
                 for i, spell in enumerate(matching_spells, 1):
