@@ -10,24 +10,24 @@
 
 ## Details
 
-	- Range: {{ spell_data.range|default('Unknown range') }}
+- Range: {{ spell_data.range|default('Unknown range') }}
 
-	- Components: {{ spell_data.components|default('None') }}
+- Components: {{ spell_data.components|default('None') }}
 
-	- Ritual: {{ spell_data.ritual|default('Not a ritual spell') }}
+- Ritual: {{ spell_data.ritual|default('Not a ritual spell') }}
 
-	- Duration: {{ spell_data.duration|default('Unknown') }}
+- Duration: {{ spell_data.duration|default('Unknown') }}
 
-	- Concentration: {{ spell_data.concentration|default('No Concentration') }}
+- Concentration: {{ spell_data.concentration|default('No Concentration') }}
 
-	- Casting Time: {{ spell_data.casting_time|default('1 action') }}
+- Casting Time: {{ spell_data.casting_time|default('1 action') }}
 
-	- Level: {{ spell_data.level|default('Unknown') }}
+- Level: {{ spell_data.level|default('Unknown') }}
 {% if spell_data.dc %}
-	- Dc: {{ spell_data.dc.dc_type.name }} (Success: {{ spell_data.dc.dc_success|default('Unknown') }})
+- Dc: {{ spell_data.dc.dc_type.name }} (Success: {{ spell_data.dc.dc_success|default('Unknown') }})
 	{% endif %}
 {% if spell_data.area_of_effect %}
-	- Area of Effect: {{ spell_data.area_of_effect.type }} (Size: {{ spell_data.area_of_effect.size }})
+- Area of Effect: {{ spell_data.area_of_effect.type }} (Size: {{ spell_data.area_of_effect.size }})
 	{% endif %}
 
 ## Damage at Slot Level
@@ -37,7 +37,7 @@
 |---- {{ level }} ----|- {{ damage }} -|
 {% endfor %}
 {% else %}
-	('No damage description for this spell')
+('No damage description for this spell')
 {% endif %}
 # Backlinks
 - School: [[{{ spell_data.school.name|default('Unknown School') }}]]

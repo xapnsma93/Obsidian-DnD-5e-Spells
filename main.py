@@ -52,9 +52,20 @@ def save_spell_md_file(spell_details, spell_template, save_directory):
     return True  # File was saved successfully
 
 
+def saving_result(spell_details, spell_template, save_directory):
+    if spell_details:
+        # Ensure that the save directory exists
+        if not ensure_valid_directory(save_directory):
+            return False
+
+        save_result = save_spell_md_file(spell_details, spell_template, save_directory)
+        if save_result:
+            print("MD file created successfully.")
+            return True
+    return False
+
+
 def main():
-    # for debugging
-    # print("Starting the main function")
     parser = argparse.ArgumentParser(description='Generate Markdown files for D&D 5e spells.')
     parser.add_argument('--path', help='Directory path to save the files', default=os.path.curdir)
     parser.add_argument('--spell', help='Specific spell to generate the MD file for')
@@ -68,11 +79,7 @@ def main():
     response = requests.get(url)
 
     if response.status_code == 200:
-        # for debugging
-        # print("API request successful")
         spell_data = response.json()
-        # for debugging
-        # print("Spell data:", spell_data)
         spells = spell_data['results']
 
         # jinja2 template from file
@@ -83,14 +90,12 @@ def main():
 
         if spell_name_to_generate:
             matching_spells = [spell for spell in spells if spell_name_to_generate.lower() in spell['name'].lower()]
-            # for debugging
-            # print("Matching spells:", matching_spells)
+
             if not matching_spells:
                 print(f'No spells found with the name "{spell_name_to_generate}" in the API.')
             elif len(matching_spells) == 1:
                 spell_details = get_spell_details(matching_spells[0]['url'])
-                # for debugging
-                # print("Spell details:", spell_details)
+
                 if spell_details:
                     # Ensure that the save directory exists
                     if not ensure_valid_directory(save_directory):
@@ -112,27 +117,15 @@ def main():
                     spell_index = int(spell_choice) - 1
                     selected_spell = matching_spells[spell_index]
                     spell_details = get_spell_details(selected_spell['url'])
-                    if spell_details:
-                        # Ensure that the save directory exists
-                        if not ensure_valid_directory(save_directory):
-                            return
 
-                        save_result = save_spell_md_file(spell_details, spell_template, save_directory)
-                        if save_result:
-                            print("MD file created successfully.")
+                    saving_result(spell_details, spell_template, save_directory)
                 except (ValueError, IndexError):
                     print("Invalid input. Please enter a valid number.")
         else:
             for all_spells in spells:
                 spell_details = get_spell_details(all_spells['url'])
-                if spell_details:
-                    # Ensure that the save directory exists
-                    if not ensure_valid_directory(save_directory):
-                        return
 
-                    save_result = save_spell_md_file(spell_details, spell_template, save_directory)
-                    if save_result:
-                        print("MD file created successfully.")
+                saving_result(spell_details, spell_template, save_directory)
     else:
         print("Error", response.status_code)
 
