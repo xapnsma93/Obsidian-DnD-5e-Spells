@@ -43,26 +43,13 @@ def save_spell_md_file(spell_details, spell_template, save_directory):
         user_response = input(f'The file {file_path} already exists. Do you want to overwrite it? (y/n): ')
         if user_response.lower() != 'y':
             print(f'Skipping {file_path}.')
-            return False  # File was not saved
+            return # File was not saved
 
     with open(file_path, 'w', encoding='utf-8') as file:
         file.write(content)
 
     print(f'Created file: {file_path}')
-    return True  # File was saved successfully
-
-
-def saving_result(spell_details, spell_template, save_directory):
-    if spell_details:
-        # Ensure that the save directory exists
-        if not ensure_valid_directory(save_directory):
-            return False
-
-        save_result = save_spell_md_file(spell_details, spell_template, save_directory)
-        if save_result:
-            print("MD file created successfully.")
-            return True
-    return False
+    print("MD file created successfully.")
 
 
 def main():
@@ -73,6 +60,11 @@ def main():
     args = parser.parse_args()
 
     save_directory = args.path
+
+    # Ensure that the save directory exists
+    if not ensure_valid_directory(save_directory):
+        return
+
     spell_name_to_generate = args.spell
 
     url = "https://www.dnd5eapi.co/api/spells"
@@ -90,35 +82,30 @@ def main():
 
         if spell_name_to_generate:
             matching_spells = [spell for spell in spells if spell_name_to_generate.lower() in spell['name'].lower()]
-
             if not matching_spells:
                 print(f'No spells found with the name "{spell_name_to_generate}" in the API.')
             elif len(matching_spells) == 1:
                 spell_details = get_spell_details(matching_spells[0]['url'])
-
-                saving_result(spell_details, spell_template, save_directory)
+                save_spell_md_file(spell_details, spell_template, save_directory)
             else:
                 print(f'Multiple spells found with the name "{spell_name_to_generate}":')
                 for i, spell in enumerate(matching_spells, 1):
                     print(f"{i}. {spell['name']}")
-
                 spell_choice = input("Enter the number of the spell you want to generate an MD file for (or type 'back' to return to the main menu): ")
                 if spell_choice.lower() == 'back':
                     return  # returns to the main menu
-
                 try:
                     spell_index = int(spell_choice) - 1
                     selected_spell = matching_spells[spell_index]
                     spell_details = get_spell_details(selected_spell['url'])
-
-                    saving_result(spell_details, spell_template, save_directory)
+                    save_spell_md_file(spell_details, spell_template, save_directory)
                 except (ValueError, IndexError):
                     print("Invalid input. Please enter a valid number.")
         else:
             for all_spells in spells:
                 spell_details = get_spell_details(all_spells['url'])
 
-                saving_result(spell_details, spell_template, save_directory)
+                save_spell_md_file(spell_details, spell_template, save_directory)
     else:
         print("Error", response.status_code)
 
