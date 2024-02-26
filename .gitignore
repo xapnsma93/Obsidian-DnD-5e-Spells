@@ -1,0 +1,4 @@
+.idea
+*.md
+!README.md
+!spell_template.md
